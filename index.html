@@ -1,196 +1,111 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>V33 ERP CLEAN FINAL</title>
 
-<title>TM VEST ERP V32 FULL</title>
-
-<!-- SUPABASE CORRETO (VERSÃO 2) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#f4f6f8;
-}
-
-.topbar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 20px;
-  background:#111;
-  color:#fff;
-}
-
-.menu {
-  display:flex;
-  gap:15px;
-}
-
-.menu button {
-  padding:8px 12px;
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:15px;
-  padding:20px;
-}
-
-.card {
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-}
-
-.kanban {
-  display:flex;
-  gap:10px;
-  padding:20px;
-}
-
-.col {
-  flex:1;
-  background:#e9ecef;
-  padding:10px;
-  border-radius:10px;
-  min-height:200px;
-}
-
-.os {
-  background:#fff;
-  margin:5px 0;
-  padding:6px;
-  border-radius:6px;
-  font-size:13px;
-}
-
-.float {
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.float button {
-  padding:10px;
-  border-radius:50px;
-  border:none;
-  cursor:pointer;
-}
-
-.green { background:#16a34a; color:#fff; }
-.blue { background:#2563eb; color:#fff; }
-.purple { background:#7c3aed; color:#fff; }
-
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+header{background:#111;color:#fff;padding:15px;}
+.container{padding:20px;}
+.kanban{display:flex;gap:10px;}
+.col{flex:1;background:#e9ecef;padding:10px;border-radius:10px;min-height:200px;}
+.card{background:#fff;padding:10px;margin:5px 0;border-radius:6px;}
+button{cursor:pointer}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <div>TM VEST ERP V32 FULL</div>
+<header>
+V33 ERP - SISTEMA LIMPO DEFINITIVO
+</header>
 
-  <div class="menu">
-    <button>Início</button>
-    <button>Histórico</button>
-    <button>Análise</button>
-    <button>Custos</button>
-    <button>Produção</button>
-  </div>
-</div>
+<div class="container">
 
-<div class="grid">
-  <div class="card">💰 Saldo Atual: R$ 109,90</div>
-  <div class="card">📈 Lucro: R$ 60,90</div>
-  <div class="card">📦 Pedidos: 1</div>
-</div>
+<h3>Kanban Produção</h3>
 
 <div class="kanban">
-  <div class="col" id="novo">Novas</div>
-  <div class="col" id="producao">Produção</div>
-  <div class="col" id="revisao">Revisão</div>
-  <div class="col" id="finalizado">Finalizado</div>
+  <div class="col" id="novo"><b>NOVO</b></div>
+  <div class="col" id="producao"><b>PRODUÇÃO</b></div>
+  <div class="col" id="revisao"><b>REVISÃO</b></div>
+  <div class="col" id="finalizado"><b>FINALIZADO</b></div>
 </div>
 
-<div class="float">
-  <button class="purple">Chat IA</button>
-  <button class="green">Gerar Orçamento</button>
-  <button class="blue">Centro de Comando</button>
 </div>
 
 <script>
-// 🔥 SUPABASE CORRIGIDO (NÃO SOBRESCREVE VARIÁVEL)
+/* =========================
+   🔥 V33 ENGINE ISOLADO
+========================= */
+
 const SUPABASE_URL = "https://vxmdbohixbruvgkugkky.supabase.co";
 const SUPABASE_KEY = "sb_publishable_O4dBjczr22wGRnlzpN_T9g_peXJr1EB";
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ----------------------------
-// LOAD INICIAL (SEGURADO)
-// ----------------------------
-async function loadOS() {
-  const { data, error } = await client
-    .from("os")
-    .select("*");
+/* -------------------------
+   STATE ÚNICO (SEM CONFLITO)
+------------------------- */
+const state = {
+  os: []
+};
 
-  if (error) {
-    console.error("Erro Supabase:", error);
-    return;
-  }
+/* -------------------------
+   RENDER LIMPO
+------------------------- */
+function render(os){
+  const col = document.getElementById(os.status || "novo");
+  if(!col) return;
 
-  if (!data) return;
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <b>${os.cliente || "Sem nome"}</b><br>
+    ID: ${os.id}
+  `;
 
-  data.forEach(renderOS);
+  col.appendChild(el);
 }
 
-// ----------------------------
-// RENDER OS
-// ----------------------------
-function renderOS(os) {
-  const status = os.status || "novo";
-  const col = document.getElementById(status);
-
-  if (!col) return;
-
-  const div = document.createElement("div");
-  div.className = "os";
-  div.innerText = `${os.cliente || "Sem nome"} #${os.id}`;
-
-  col.appendChild(div);
+/* -------------------------
+   LOAD INICIAL
+------------------------- */
+async function load(){
+  const { data } = await sb.from("os").select("*");
+  state.os = data || [];
+  state.os.forEach(render);
 }
 
-// ----------------------------
-// REALTIME (CORRIGIDO)
-// ----------------------------
-client
-  .channel("os-realtime")
-  .on("postgres_changes", {
-    event: "*",
-    schema: "public",
-    table: "os"
-  }, (payload) => {
+/* -------------------------
+   REALTIME (SEM RELOAD)
+------------------------- */
+sb.channel("v33-os")
+.on("postgres_changes",
+{
+  event: "*",
+  schema: "public",
+  table: "os"
+},
+(payload) => {
 
-    const os = payload.new;
+  const os = payload.new;
 
-    if (!os) return;
+  if(!os) return;
 
-    // evita reload (isso quebrava tudo antes)
-    renderOS(os);
-  })
-  .subscribe();
+  render(os);
+})
 
-// ----------------------------
-loadOS();
+.subscribe();
+
+/* -------------------------
+   INIT SEGURO
+------------------------- */
+document.addEventListener("DOMContentLoaded", load);
+
 </script>
 
 </body>
