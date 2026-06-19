@@ -1,78 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TM VEST ERP V32</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<title>TM VEST ERP V32 FULL</title>
 
-  <style>
-    body { font-family: Arial; background:#f5f5f5; margin:0; }
-    header { padding:20px; background:#111; color:#fff; }
-    .card { background:#fff; margin:20px; padding:20px; border-radius:10px; }
-    .kanban { display:flex; gap:10px; padding:20px; }
-    .col { flex:1; background:#eee; padding:10px; border-radius:10px; min-height:200px; }
-    .os { background:#fff; margin:10px 0; padding:10px; border-radius:6px; }
-  </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background:#f4f6f8;
+}
+
+/* TOP BAR */
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 20px;
+  background:#111;
+  color:#fff;
+}
+
+/* MENU */
+.menu {
+  display:flex;
+  gap:15px;
+}
+
+.menu button {
+  padding:8px 12px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+}
+
+/* CARDS */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+  padding:20px;
+}
+
+.card {
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+}
+
+/* KANBAN */
+.kanban {
+  display:flex;
+  gap:10px;
+  padding:20px;
+}
+
+.col {
+  flex:1;
+  background:#e9ecef;
+  padding:10px;
+  border-radius:10px;
+  min-height:200px;
+}
+
+/* FLOATING */
+.float {
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.float button {
+  padding:10px;
+  border-radius:50px;
+  border:none;
+  cursor:pointer;
+}
+
+.green { background:#16a34a; color:#fff; }
+.blue { background:#2563eb; color:#fff; }
+.purple { background:#7c3aed; color:#fff; }
+
+</style>
 </head>
 
 <body>
 
-<header>
-  <h2>TM VEST ERP V32 - CLEAN SYSTEM</h2>
-</header>
+<div class="topbar">
+  <div>TM VEST ERP V32 FULL</div>
 
-<div class="card">
-  <h3>Produção (Kanban)</h3>
-
-  <div class="kanban">
-    <div class="col" id="novo">
-      <h4>Novas</h4>
-    </div>
-
-    <div class="col" id="producao">
-      <h4>Produção</h4>
-    </div>
-
-    <div class="col" id="revisao">
-      <h4>Revisão</h4>
-    </div>
-
-    <div class="col" id="finalizado">
-      <h4>Finalizado</h4>
-    </div>
+  <div class="menu">
+    <button>Início</button>
+    <button>Histórico</button>
+    <button>Análise</button>
+    <button>Custos</button>
+    <button>Produção</button>
   </div>
 </div>
 
+<!-- CARDS -->
+<div class="grid">
+  <div class="card">💰 Saldo Atual: R$ 109,90</div>
+  <div class="card">📈 Lucro: R$ 60,90</div>
+  <div class="card">📦 Pedidos: 1</div>
+</div>
+
+<!-- KANBAN -->
+<div class="kanban">
+  <div class="col" id="novo">Novas</div>
+  <div class="col" id="producao">Produção</div>
+  <div class="col" id="revisao">Revisão</div>
+  <div class="col" id="finalizado">Finalizado</div>
+</div>
+
+<!-- FLOATING TOOLS -->
+<div class="float">
+  <button class="purple">Chat IA</button>
+  <button class="green">Gerar Orçamento</button>
+  <button class="blue">Centro de Comando</button>
+</div>
+
 <script>
-const supabaseUrl = "https://vxmdbohixbruvgkugkky.supabase.co";
-const supabaseKey = "sb_publishable_O4dBjczr22wGRnlzpN_T9g_peXJr1EB";
+// SUPABASE CONFIG (colocar depois)
+const SUPABASE_URL = "https://vxmdbohixbruvgkugkky.supabase.co";
+const SUPABASE_KEY = "SUA_ANON_KEY";
 
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-function addOS(os){
-  const col = document.getElementById(os.status || "novo");
-  if(col){
-    const div = document.createElement("div");
-    div.className = "os";
-    div.innerText = os.cliente + " - #" + os.id;
-    col.appendChild(div);
-  }
-}
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function loadOS(){
   let { data } = await supabase.from("os").select("*");
-  data.forEach(addOS);
+
+  data.forEach(os => {
+    const col = document.getElementById(os.status || "novo");
+    if(col){
+      const div = document.createElement("div");
+      div.style.background = "#fff";
+      div.style.margin = "5px";
+      div.style.padding = "5px";
+      div.innerText = os.cliente + " #" + os.id;
+      col.appendChild(div);
+    }
+  });
 }
 
 supabase
-  .channel("os-v32")
+  .channel("os-realtime")
   .on("postgres_changes",
     { event:"*", schema:"public", table:"os" },
-    payload => {
-      location.reload(); // simples e estável no começo
-    }
+    () => location.reload()
   )
   .subscribe();
 
